@@ -1,30 +1,32 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+"""Start web application with two routings
 """
 
-"""
-from flask import Flask, render_template
-from models.state import State
 from models import storage
-
+from models.state import State
+from flask import Flask, render_template
 app = Flask(__name__)
 
 
-@app.teardown_appcontext
-def teardown(exception):
+@app.route('/cities_by_states')
+def states_list():
+    """Render template with states
     """
+    path = '8-cities_by_states.html'
+    states = storage.all(State)
 
+    # sort State object alphabetically by name
+    # sorted_states = sorted(states.values(), key=lambda state: state.name)
+    return render_template(path, states=states)
+
+
+@app.teardown_appcontext
+def app_teardown(arg=None):
+    """Clean-up session
     """
     storage.close()
 
 
-@app.route('/cities_by_states', strict_slashes=False)
-def states_list():
-    """
-    State list
-    """
-    states = storage.all(State)
-    return render_template('8-cities_by_states.html', states=states)
-
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)

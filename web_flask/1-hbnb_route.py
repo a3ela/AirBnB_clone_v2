@@ -1,27 +1,24 @@
 #!/usr/bin/python3
-"""Starts a Flask web application.
+"""Start web application with two routings
 """
-from flask import Flask
 
+from flask import Flask
 app = Flask(__name__)
-app.url_map.strict_slashes = False
 
 
 @app.route('/')
-def home():
-    """
-    Displays 'Hello HBNB!'.
+def hello():
+    """Return string when route queried
     """
     return 'Hello HBNB!'
 
 
 @app.route('/hbnb')
 def hbnb():
+    """Return string when route queried
     """
-    Displays 'HBNB'.
-    """
-    return "HBNB"
-
+    return 'HBNB'
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)

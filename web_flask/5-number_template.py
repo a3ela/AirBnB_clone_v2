@@ -1,64 +1,55 @@
 #!/usr/bin/python3
-"""Starts a Flask web application.
+"""Start web application with two routings
 """
-from flask import Flask, render_template
 
+from flask import Flask, render_template
 app = Flask(__name__)
-app.url_map.strict_slashes = False
 
 
 @app.route('/')
-def home():
-    """
-    Displays 'Hello HBNB!'.
+def hello():
+    """Return string when route queried
     """
     return 'Hello HBNB!'
 
 
 @app.route('/hbnb')
 def hbnb():
+    """Return string when route queried
     """
-    Displays 'HBNB'.
-    """
-    return "HBNB"
+    return 'HBNB'
 
 
 @app.route('/c/<text>')
-def c_with_params(text):
+def c_is_fun(text):
+    """Return reformatted text
     """
-    Displays 'C' followed by the value of <text>.
-    """
-    text_no_underscore = text.replace('_', ' ')
-    return "C {}".format(text_no_underscore)
+    return 'C ' + text.replace('_', ' ')
 
 
-@app.route('/python', defaults={'text': 'is_cool'})
+@app.route('/python/')
 @app.route('/python/<text>')
-def python_with_text_params(text):
+def python_with_text(text='is cool'):
+    """Reformat text based on optional variable
     """
-    Displays 'Python' followed by the value of <text>
-
-    Replaces any underscores in <text> with slashes.
-    """
-    text_no_underscore = text.replace('_', ' ')
-    return "Python {}".format(text_no_underscore)
+    return 'Python ' + text.replace('_', ' ')
 
 
 @app.route('/number/<int:n>')
-def number(n):
+def number(n=None):
+    """Allow request if path variable is a valid integer
     """
-    Displays 'n is a number' only if n is an integer.
-    """
-    return "{} is a number".format(n)
+    return str(n) + ' is a number'
 
 
 @app.route('/number_template/<int:n>')
 def number_template(n):
+    """Retrieve template for request
     """
-
-    """
-    return render_template('5-number.html', number=n)
+    path = '5-number.html'
+    return render_template(path, n=n)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.url_map.strict_slashes = False
+    app.run(host='0.0.0.0', port=5000)
