@@ -2,26 +2,30 @@
 # script that sets up web servers for the deployment of web_static
 sudo apt-get update
 sudo apt-get -y install nginx
-sudo ufw allow 'Nginx HTTP'
 
-sudo mkdir -p /data/
-sudo mkdir -p /data/web_static/
-sudo mkdir -p /data/web_static/releases/
-sudo mkdir -p /data/web_static/shared/
-sudo mkdir -p /data/web_static/releases/test/
-sudo touch /data/web_static/releases/test/index.html
-sudo echo "<html>
-  <head>
-  </head>
-  <body>
-    Holberton School
-  </body>
-</html>" | sudo tee /data/web_static/releases/test/index.html
+mkdir -p /data/
+mkdir -p /data/web_static/
+mkdir -p /data/web_static/releases/
+mkdir -p /data/web_static/shared/
+mkdir -p /data/web_static/releases/test/
 
-sudo ln -s -f /data/web_static/releases/test/ /data/web_static/current
+touch /data/web_static/releases/test/index.html
 
-sudo chown -R ubuntu:ubuntu /data/
+echo "<html>
+	<head>
+	</head>
+	<body>
+		Holberton School
+	</body>
+</html>" | tee /data/web_static/releases/test/index.html > /dev/null
 
-sudo sed -i '/listen 80 default_server/a location /hbnb_static { alias /data/web_static/current/;}' /etc/nginx/sites-enabled/default
+ln -sf /data/web_static/releases/test/ /data/web_static/current
+
+chown -R "$USER": /data/
+
+sudo nginx_config="/etc/nginx/sites-available/default"
+if [ -e "$nginx_config" ]; then
+		sudo sed -i '/server_name_;/a \\n   location /hbnb_static/ {\n      alias /data/web_static/current/;\n   }\n' "$nginx_config"
+fi
 
 sudo service nginx restart
