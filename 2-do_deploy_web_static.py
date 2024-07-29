@@ -5,13 +5,12 @@ your web servers, using the function do_deploy:
 Prototype: def do_deploy(archive_path):
 Returns False if the file at the path archive_path doesn’t exist
 """
-from fabric.api import *
+from fabric.api import env, local, run, put
 import time
 import os
-from fabric.operations import run, put
 
 env.hosts = ['54.237.48.16', '18.234.145.133']
-
+env.user = "ubuntu"
 
 def do_deploy(archive_path):
     """""deploy you codebase"""

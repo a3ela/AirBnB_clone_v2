@@ -28,46 +28,45 @@ def do_pack():
 
 
 def do_deploy(archive_path):
-    """distributes an archive to my web servers"""
+    """""deploy you codebase"""
+    t_str = time.strftime('%Y%m%d%H%M%S')
+    f_name = archive_path.split('/')[-1]
+    f_noext = f_name.split('.')[0]
+
     if not os.path.exists(archive_path):
         return False
     try:
-        # Upload archive
+        # upload the archive to tmp of the wen server
         put(archive_path, '/tmp/')
 
-        # Create a target dir without the file extension
-        timestamp = time.strftime("%Y%m%d%H%M%S")
-        run(
-            'sudo mkdir -p /data/web_static/releases/web_static_{:s}/'.
-            format(timestamp))
+        # create a file with the time stamp
+        run('sudo mkdir -p /data/web_static/releases/{}/'.
+            format(f_noext))
 
-        # uncompress archive to the targed dir
-        run('sudo tar xzvf /tmp/web_static_{:s}.tgz --directory\
-            /data/web_static/releases/web_static_{:s}/'.
-            format(timestamp, timestamp))
+        # uncomprestion
+        run('sudo tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.
+            format(f_name, f_noext))
 
-        # delete the archive from the web server
-        run('sudo rm /tmp/web_static_{:s}.tgz'.format(timestamp))
+        # delete the archive
+        run('sudo rm /tmp/{}'.format(f_name))
 
-        # move contents into host web_static
-        run('sudo mv /data/web_static/releases/web_static_{:s}/web_static/*\
-            /data/web_static/releases/web_static_{}/'.format(
-            timestamp, timestamp))
+        # move contents into web_static
+        run('sudo mv /data/web_static/releases/{}/web_static/*\
+                /data/web_static/releases/{}'.format(f_noext, f_noext))
 
         # remove irrelevant web_static dir
-        run('sudo rm -rf /data/web_static/releases/web_static_{}/web_static'.
-            format(timestamp))
+        run('sudo rm -rf /data/web_static/releases/{}/web_static'.
+            format(f_noext))
 
-        # delete the initial symbolic link from the web server
+        # delete the symobolic link from the web server
         run('sudo rm -rf /data/web_static/current')
 
-        # create a new symbolic link
-        run('sudo ln -s /data/web_static/releases/web_static_{:s}/ \
-            /data/web_static/current'.format(
-                timestamp))
+        # create a new stybolic link
+        run('sudo ln -s /data/web_static/releases/{}/ \
+                /data/web_static/current'.format(f_noext))
     except BaseException:
         return False
-    # if all that succeeded, return True
+
     return True
 
 
