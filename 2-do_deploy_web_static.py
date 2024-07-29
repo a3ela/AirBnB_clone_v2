@@ -26,43 +26,21 @@ def do_pack():
 
 
 def do_deploy(archive_path):
-    """""deploy you codebase"""
-    t_str = time.strftime('%Y%m%d%H%M%S')
-    f_name = archive_path.split('/')[-1]
-    f_noext = f_name.split('.')[0]
-
-    if not os.path.exists(archive_path):
+    """distributes an archive to the web servers"""
+    if exists(archive_path) is False:
         return False
     try:
-        # upload the archive to tmp of the wen server
+        file_n = archive_path.split("/")[-1]
+        no_ext = file_n.split(".")[0]
+        path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
-
-        # create a file with the time stamp
-        run('sudo mkdir -p /data/web_static/releases/{}/'.
-            format(f_noext))
-
-        # uncomprestion
-        run('sudo tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.
-            format(f_name, f_noext))
-
-        # delete the archive
-        run('sudo rm /tmp/{}'.format(f_name))
-
-        # move contents into web_static
-        run('sudo mv /data/web_static/releases/{}/web_static/*\
-                /data/web_static/releases/{}'.format(f_noext, f_noext))
-
-        # remove irrelevant web_static dir
-        run('sudo rm -rf /data/web_static/releases/{}/web_static'.
-            format(f_noext))
-
-        # delete the symobolic link from the web server
-        run('sudo rm -rf /data/web_static/current')
-
-        # create a new stybolic link
-        run('sudo ln -s /data/web_static/releases/{}/ \
-                /data/web_static/current'.format(f_noext))
+        run('mkdir -p {}{}/'.format(path, no_ext))
+        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
+        run('rm /tmp/{}'.format(file_n))
+        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
+        run('rm -rf {}{}/web_static'.format(path, no_ext))
+        run('rm -rf /data/web_static/current')
+        run('ln -s {}{}/ /data/web_static/current'.format(path, no_ext))
+        return True
     except BaseException:
         return False
-
-    return True
