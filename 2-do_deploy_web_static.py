@@ -50,6 +50,8 @@ def do_deploy(archive_path):
         # create a new stybolic link
         run('sudo ln -s /data/web_static/releases/{}/ \
                 /data/web_static/current'.format(f_noext))
+
+        print("New version deployed!")
     except BaseException:
         return False
 
