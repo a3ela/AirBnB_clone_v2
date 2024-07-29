@@ -13,18 +13,6 @@ from fabric.operations import run, put
 env.hosts = ['54.237.48.16', '18.234.145.133']
 
 
-def do_pack():
-    """create a tgz archive"""
-    try:
-        local('mkdir -p versions')
-        local('tar -cvzf versions/web_static_{:s}.tgz web_static/'.
-              format(time.strftime('%Y%m%d%H%M%S')))
-        return 'versions/web_static_{:s}.tgz'.\
-            format(time.strftime('%Y%m%d%H%M%S'))
-    except BaseException:
-        return None
-
-
 def do_deploy(archive_path):
     """distributes an archive to the web servers"""
     if exists(archive_path) is False:
