@@ -25,6 +25,8 @@ def do_pack():
 def do_deploy(archive_path):
     """""deploy you codebase"""
     t_str = time.strftime('%Y%m%d%H%M%S')
+    f_name = archive_path.split('/')[-1]
+    f_noext = f_name.split('.')[0]
 
     if not os.path.exists(archive_path):
         return False
@@ -32,28 +34,28 @@ def do_deploy(archive_path):
         # upload the archive to /tmp of the wen server
         put(archive_path, '/tmp/')
         #create a file with the time stamp
-        run('sudo mkdir -p /data/web_static/releases/web_static_{:s}/'.
-                format(t_str))
+        run('sudo mkdir -p /data/web_static/releases/{}/'.
+                format(f_noext))
         
         # uncomprestion
-        run('sudo tar -xzf /tmp/web_static_{:s}.tgz -C /data/web_static/releases/web_static_{:s}/'.format(t_str, t_str))
+        run('sudo tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.format(f_name, f_noext))
 
         # delete the archive
-        run('sudo rm /tmp/web_static_{:s}'.format(t_str))
+        run('sudo rm /tmp/{}'.format(f_noext))
 
         # move contents into web_static
-        run('sudo mv /data/web_static/releases/web_static_{:s}/web_static/*\
-                /data/web_static/releases/web_static_{}'.format(t_str, t_str))
+        run('sudo mv /data/web_static/releases/{}/web_static/*\
+                /data/web_static/releases/{}'.format(f_noext, f_noext))
 
         # remove irrelevant web_static dir
-        run('sudo rm -rf /data/web_static/releases/web_static_{}/web_static'.format(t_str))
+        run('sudo rm -rf /data/web_static/releases/{}/web_static'.format(f_noext))
 
         # delete the symobolic link from the web server
         run('sudo rm -rf /data/web_static/current')
 
         # create a new stybolic link
-        run('sudo ln -s /data/web_static/releases/web_static_{:s}/ \
-                /data/web_static/current'.format(t_str))
+        run('sudo ln -s /data/web_static/releases/{}/ \
+                /data/web_static/current'.format(f_noext))
     except BaseException:
         return False
 
