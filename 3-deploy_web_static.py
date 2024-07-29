@@ -10,7 +10,7 @@ import os
 import time
 
 
-env.hosts = ['34.138.195.126', '35.185.8.133']
+env.hosts = ['54.237.48.16', '18.234.145.133']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/id_rsa'
 
