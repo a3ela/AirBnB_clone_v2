@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""Fabric script (based on the file 1-pack_web_static.py) that distributes an archive to your web servers, using the function do_deploy:
+"""Fabric script (based on the file 1-pack_web_static.py)
+that distributes an archive to
+your web servers, using the function do_deploy:
 Prototype: def do_deploy(archive_path):
 Returns False if the file at the path archive_path doesn’t exist
 """
@@ -16,11 +18,12 @@ def do_pack():
     try:
         local('mkdir -p versions')
         local('tar -cvzf versions/web_static_{:s}.tgz web_static/'.
-                format(time.strftime('%Y%m%d%H%M%S')))
+              format(time.strftime('%Y%m%d%H%M%S')))
         return 'versions/web_static_{:s}.tgz'.\
-                format(time.strftime('%Y%m%d%H%M%S'))
+            format(time.strftime('%Y%m%d%H%M%S'))
     except BaseException:
         return None
+
 
 def do_deploy(archive_path):
     """""deploy you codebase"""
@@ -31,24 +34,27 @@ def do_deploy(archive_path):
     if not os.path.exists(archive_path):
         return False
     try:
-        # upload the archive to /tmp of the wen server
+        # upload the archive to tmp of the wen server
         put(archive_path, '/tmp/')
-        #create a file with the time stamp
+
+        # create a file with the time stamp
         run('sudo mkdir -p /data/web_static/releases/{}/'.
-                format(f_noext))
-        
+            format(f_noext))
+
         # uncomprestion
-        run('sudo tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.format(f_name, f_noext))
+        run('sudo tar -xzf /tmp/{} -C /data/web_static/releases/{}/'.
+            format(f_name, f_noext))
 
         # delete the archive
-        run('sudo rm /tmp/{}'.format(f_noext))
+        run('sudo rm /tmp/{}'.format(f_name))
 
         # move contents into web_static
         run('sudo mv /data/web_static/releases/{}/web_static/*\
                 /data/web_static/releases/{}'.format(f_noext, f_noext))
 
         # remove irrelevant web_static dir
-        run('sudo rm -rf /data/web_static/releases/{}/web_static'.format(f_noext))
+        run('sudo rm -rf /data/web_static/releases/{}/web_static'.
+            format(f_noext))
 
         # delete the symobolic link from the web server
         run('sudo rm -rf /data/web_static/current')
@@ -60,20 +66,3 @@ def do_deploy(archive_path):
         return False
 
     return True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
