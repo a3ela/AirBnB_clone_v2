@@ -81,4 +81,4 @@ def deploy():
     created_archive = do_pack()
     if not created_archive:
         return False
-    return do_deploy(created_archive)from fabric.api import local, env, put, run
+    return do_deploy(created_archive)
