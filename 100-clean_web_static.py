@@ -18,10 +18,16 @@ def do_clean(number=0):
     number: the number of archives to keep while
     deleting the rest
     """
-    # local versions dir cleanup
-    run(f"ls -ltr versions | sort -nr | tail -n +{number + 1} | xargs rm -f")
 
-    # remote versions dir cleanup on servers
-    remote_versions_dir = "/data/web_static/releases/"
-    sudo(f"ls -ltr {remote_versions_dir} | sort -nr | \
-        tail -n +{number + 1} | xargs rm -f")
+    number = 1 if int(number) == 0 else int(number)
+
+    archives = sorted(os.listdir("versions"))
+    [archives.pop() for i in range(number)]
+    with lcd("versions"):
+        [local("rm ./{}".format(a)) for a in archives]
+
+    with cd("/data/web_static/releases"):
+        archives = run("ls -tr").split()
+        archives = [a for a in archives if "web_static_" in a]
+        [archives.pop() for i in range(number)]
+        [run("rm -rf ./{}".format(a)) for a in archives]
