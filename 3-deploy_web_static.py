@@ -7,51 +7,78 @@ Fabric script methods:
 Usage:
     fab -f 3-deploy_web_static.py deploy -i my_ssh_private_key -u ubuntu
 """
-from fabric.api import local, env, put, run
-from time import strftime
-import os.path
+from fabric.api import *
+from fabric.operations import run, put
+import os
+import time
+
+
 env.hosts = ['54.237.48.16', '18.234.145.133']
+env.user = 'ubuntu'
+env.key_filename = '~/.ssh/id_rsa'
 
 
 def do_pack():
-    """generate .tgz archive of web_static/ folder"""
-    timenow = strftime("%Y%M%d%H%M%S")
+    """generates a .tgz archive"""
     try:
         local("mkdir -p versions")
-        filename = "versions/web_static_{}.tgz".format(timenow)
-        local("tar -cvzf {} web_static/".format(filename))
-        return filename
+        local("tar -cvzf versions/web_static_{:s}.tgz web_static/".
+              format(time.strftime("%Y%m%d%H%M%S")))
+        return "versions/web_static_{:s}.tgz".\
+            format(time.strftime("%Y%m%d%H%M%S"))
     except BaseException:
         return None
 
 
 def do_deploy(archive_path):
-    """
-    Deploy archive to web server
-    """
-    if os.path.isfile(archive_path) is False:
+    """distributes an archive to my web servers"""
+    if not os.path.exists(archive_path):
         return False
     try:
-        filename = archive_path.split("/")[-1]
-        no_ext = filename.split(".")[0]
-        path_no_ext = "/data/web_static/releases/{}/".format(no_ext)
-        symlink = "/data/web_static/current"
-        put(archive_path, "/tmp/")
-        run("mkdir -p {}".format(path_no_ext))
-        run("tar -xzf /tmp/{} -C {}".format(filename, path_no_ext))
-        run("rm /tmp/{}".format(filename))
-        run("mv {}web_static/* {}".format(path_no_ext, path_no_ext))
-        run("rm -rf {}web_static".format(path_no_ext))
-        run("rm -rf {}".format(symlink))
-        run("ln -s {} {}".format(path_no_ext, symlink))
-        return True
+        # Upload archive
+        put(archive_path, '/tmp/')
+
+        # Create a target dir without the file extension
+        timestamp = time.strftime("%Y%m%d%H%M%S")
+        run(
+            'sudo mkdir -p /data/web_static/releases/web_static_{:s}/'.
+            format(timestamp))
+
+        # uncompress archive to the targed dir
+        run('sudo tar xzvf /tmp/web_static_{:s}.tgz --directory\
+            /data/web_static/releases/web_static_{:s}/'.
+            format(timestamp, timestamp))
+
+        # delete the archive from the web server
+        run('sudo rm /tmp/web_static_{:s}.tgz'.format(timestamp))
+
+        # move contents into host web_static
+        run('sudo mv /data/web_static/releases/web_static_{:s}/web_static/*\
+            /data/web_static/releases/web_static_{}/'.format(
+            timestamp, timestamp))
+
+        # remove irrelevant web_static dir
+        run('sudo rm -rf /data/web_static/releases/web_static_{}/web_static'.
+            format(timestamp))
+
+        # delete the initial symbolic link from the web server
+        run('sudo rm -rf /data/web_static/current')
+
+        # create a new symbolic link
+        run('sudo ln -s /data/web_static/releases/web_static_{:s}/ \
+            /data/web_static/current'.format(
+                timestamp))
     except BaseException:
         return False
+    # if all that succeeded, return True
+    return True
 
 
 def deploy():
-    archive_path = do_pack()
-    if archive_path is None:
+    """
+    creates and distributes an archive to my web servers
+    """
+    created_archive = do_pack()
+    if not created_archive:
         return False
-    success = do_deploy(archive_path)
-    return success
+    return do_deploy(created_archive)from fabric.api import local, env, put, run
