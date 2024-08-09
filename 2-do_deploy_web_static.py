@@ -12,6 +12,7 @@ import os
 env.hosts = ['54.237.48.16', '18.234.145.133']
 env.user = "ubuntu"
 
+
 def do_pack():
     """Function to compress files in an archive"""
     local("mkdir -p versions")
