@@ -12,15 +12,18 @@ env.hosts = ["54.237.48.16", "18.234.145.133"]
 
 
 def do_clean(number=0):
-    """ Delete out dated archives
-    args:
-    number: the number of archives to keep while
-    deleting the rest
-    """
-    number = int(number)
-    local_dir = "versions"
-    run(f"find {local_dir} -type f -name '*.tar.gz' | sort -nr | tail -n +{int(number + 1)} | xargs rm -f")
-
-      # Remote versions folder cleanup (on both web servers)
-    remote_dir = "/data/web_static/releases"
-    sudo(f"find {remote_dir} -type f -name '*.tar.gz' | sort -nr | tail -n +{int(number + 1)} | xargs rm -f")
+    """Deletes out-of-date archives"""
+    files = local("ls -1t versions", capture=True)
+    file_names = files.split("\n")
+    n = int(number)
+    if n in (0, 1):
+        n = 1
+    for i in file_names[n:]:
+        local("rm versions/{}".format(i))
+    dir_server = run("ls -1t /data/web_static/releases")
+    dir_server_names = dir_server.split("\n")
+    for i in dir_server_names[n:]:
+        if i is 'test':
+            continue
+        run("rm -rf /data/web_static/releases/{}"
+            .format(i))
