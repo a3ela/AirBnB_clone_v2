@@ -1,48 +1,38 @@
 #!/usr/bin/python3
-"""
-starts a Flask web application
-Your web application must be listening on 0.0.0.0, port 5000
-You must use the option strict_slashes=False in your route definition
-/: display 'Hello HBNB!'
-/hbnb: display 'HBNB'
-"""
+"""Starts a Flask web application"""
+
 from flask import Flask
 app = Flask(__name__)
 
 
 @app.route('/', strict_slashes=False)
-def hello_world():
-    """
-    returns the message to display in our browser
-    """
+def hello_holberton():
+    """Returns a string at the root route"""
     return 'Hello HBNB!'
 
 
 @app.route('/hbnb', strict_slashes=False)
 def hbnb():
-    """
-    display "HBNB" in the browser
-    """
+    """Returns a string at the /hbnb route"""
     return 'HBNB'
 
 
 @app.route('/c/<text>', strict_slashes=False)
-def Cisfun(text):
-    """
-    display "C" followed by the value of the text variable
-    """
-    string = 'C %s' % text
-    return string.replace('_', ' ')
+def cisfun(text):
+    """Returns a string at the /c/<text> route,
+    expands the <text> variable"""
+    new = text.replace('_', ' ')
+    return 'C %s' % new
 
 
-@app.route('/python/', defaults={'text': 'is_cool'})
+@app.route('/python', defaults={'text': 'is cool'}, strict_slashes=False)
 @app.route('/python/<text>', strict_slashes=False)
-def Pytho(text):
-    """
-    display "Python", followed by the value of text variable
-    """
-    string = 'Python %s' % text
-    return string.replace('_', ' ')
+def pythoniscool(text):
+    """Returns a string at the /python route, with a default text
+    of 'is cool', or the expansion of <text>"""
+    new = text.replace('_', ' ')
+    return 'Python %s' % new
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
