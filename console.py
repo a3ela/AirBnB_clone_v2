@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 Module for console
 """
@@ -14,7 +14,6 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 from models.city import City
-
 
 
 def split_curly_braces(e_arg):
@@ -169,20 +168,26 @@ class HBNBCommand(cmd.Cmd):
         Usage: <User>.all()
                 <User>.show()
         """
-        objects = storage.all()
-
-        commands = shlex.split(arg)
-
-        if len(commands) == 0:
-            for key, value in objects.items():
-                print(str(value))
-        elif commands[0] not in self.valid_classes:
-            print("** class doesn't exist **")
-        else:
-            for key, value in objects.items():
-                if key.split('.')[0] == commands[0]:
-                    print(str(value))
+        if line:
+            args = line.split(" ")
+            if args[0] not in self.all_classes:
+                print("** class doesn't exist **")
+                return
+            objects = storage.all(line)
+        my_list = []
+        if not line:
+            objects = storage.all()
+            for key in objects:
+                my_list.append(objects[key])
+            print(my_list)
+            return
         
+        for key in objects:
+            name = key.split('.')
+            if name[0] == args[0]:
+                my_list.append(objects[key])
+        print(my_list)
+
     def do_count(self, arg):
         """
         Counts and retrieves the number of instances of a class
