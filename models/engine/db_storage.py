@@ -1,132 +1,143 @@
 #!/usr/bin/python3
-"""
-Database engine
-"""
-
-import os
-from sqlalchemy import create_engine, MetaData
+"""This is the db storage class for AirBnB"""
+import datetime
+from os import getenv
 from sqlalchemy.orm import sessionmaker, scoped_session
-from models.base_model import Base
-from models import base_model, amenity, city, place, review, state, user
+from sqlalchemy import create_engine
+from models.base_model import BaseModel, Base
+from models.user import User
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.place import Place
+from models.review import Review
 
 
-class DBStorage:
+class DBStorage():
     """
-        handles long term storage of all class instances
-    """
-    CNC = {
-        'Amenity': amenity.Amenity,
-        'City': city.City,
-        'Place': place.Place,
-        'Review': review.Review,
-        'State': state.State,
-        'User': user.User
-    }
-
-    """
-        handles storage for database
+    Database Engine for AirBnB project
     """
     __engine = None
     __session = None
 
     def __init__(self):
-        """
-            creates the engine self.__engine
-        """
-        self.__engine = create_engine(
-            'mysql+mysqldb://{}:{}@{}/{}'.format(
-                os.environ.get('HBNB_MYSQL_USER'),
-                os.environ.get('HBNB_MYSQL_PWD'),
-                os.environ.get('HBNB_MYSQL_HOST'),
-                os.environ.get('HBNB_MYSQL_DB')))
-        if os.environ.get("HBNB_ENV") == 'test':
-            Base.metadata.drop_all(self.__engine)
+        """Init method"""
+        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
+                                      .format(getenv('HBNB_MYSQL_USER'),
+                                              getenv('HBNB_MYSQL_PWD'),
+                                              getenv('HBNB_MYSQL_HOST'),
+                                              getenv('HBNB_MYSQL_DB')),
+                                      pool_pre_ping=True)
+        if getenv('HBNB_ENV') == 'test':
+            Base.metadata.drop_all(bind=self.__engine)
 
     def all(self, cls=None):
-        """
-           returns a dictionary of all objects
-        """
-        obj_dict = {}
-        if cls is not None:
-            a_query = self.__session.query(DBStorage.CNC[cls])
-            for obj in a_query:
-                obj_ref = "{}.{}".format(type(obj).__name__, obj.id)
-                obj_dict[obj_ref] = obj
-            return obj_dict
+        """Returns dictionary with all objects depending
+        of the class name (argument cls)"""
+        if cls:
+            objs = self.__session.query(self.classes()[cls])
+        else:
+            objs = self.__session.query(State).all()
+            objs += self.__session.query(City).all()
+            objs += self.__session.query(User).all()
+            objs += self.__session.query(Place).all()
+            objs += self.__session.query(Amenity).all()
+            objs += self.__session.query(Review).all()
 
-        for c in DBStorage.CNC.values():
-            a_query = self.__session.query(c)
-            for obj in a_query:
-                obj_ref = "{}.{}".format(type(obj).__name__, obj.id)
-                obj_dict[obj_ref] = obj
-        return obj_dict
+        dic = {}
+        for obj in objs:
+            k = '{}.{}'.format(type(obj).__name__, obj.id)
+            dic[k] = obj
+        return dic
 
     def new(self, obj):
-        """
-            adds objects to current database session
-        """
+        """Add the object to the current
+        database session (self.__session)"""
         self.__session.add(obj)
 
     def save(self):
-        """
-            commits all changes of current database session
-        """
+        """Commit all changes of the current
+        database session (self.__session)"""
         self.__session.commit()
 
-    def rollback_session(self):
-        """
-            rollsback a session in the event of an exception
-        """
-        self.__session.rollback()
-
     def delete(self, obj=None):
-        """
-            deletes obj from current database session if not None
-        """
+        """Delete from the current database session obj if not None"""
         if obj:
             self.__session.delete(obj)
-            self.save()
-
-    def delete_all(self):
-        """
-           deletes all stored objects, for testing purposes
-        """
-        for c in DBStorage.CNC.values():
-            a_query = self.__session.query(c)
-            all_objs = [obj for obj in a_query]
-            for obj in range(len(all_objs)):
-                to_delete = all_objs.pop(0)
-                to_delete.delete()
-        self.save()
 
     def reload(self):
-        """
-           creates all tables in database & session from engine
-        """
+        """Create the current database session (self.__session) from
+        the engine (self.__engine) by using a sessionmaker"""
+        from models.user import User
+        from models.state import State
+        from models.city import City
+        from models.amenity import Amenity
+        from models.place import Place
+        from models.review import Review
+
         Base.metadata.create_all(self.__engine)
-        self.__session = scoped_session(
-            sessionmaker(
-                bind=self.__engine,
-                expire_on_commit=False))
+        self.__session = sessionmaker(bind=self.__engine,
+                                      expire_on_commit=False)
+        Session = scoped_session(self.__session)
+        self.__session = Session()
 
     def close(self):
-        """
-            calls remove() on private session attribute (self.session)
-        """
-        self.__session.remove()
+        """Removes the session"""
+        self.__session.close()
 
-    def get(self, cls, id):
-        """
-            retrieves one object based on class name and id
-        """
-        if cls and id:
-            fetch = "{}.{}".format(cls, id)
-            all_obj = self.all(cls)
-            return all_obj.get(fetch)
-        return None
+    def classes(self):
+        """Returns a dictionary of valid classes and their references."""
+        from models.base_model import BaseModel
+        from models.user import User
+        from models.state import State
+        from models.city import City
+        from models.amenity import Amenity
+        from models.place import Place
+        from models.review import Review
 
-    def count(self, cls=None):
-        """
-            returns the count of all objects in storage
-        """
-        return (len(self.all(cls)))
+        classes = {"BaseModel": BaseModel,
+                   "User": User,
+                   "State": State,
+                   "City": City,
+                   "Amenity": Amenity,
+                   "Place": Place,
+                   "Review": Review}
+        return classes
+
+    def attributes(self):
+        """Returns the valid attributes and their types for classname."""
+        attributes = {
+            "BaseModel":
+                     {"id": str,
+                      "created_at": datetime.datetime,
+                      "updated_at": datetime.datetime},
+            "User":
+                     {"email": str,
+                      "password": str,
+                      "first_name": str,
+                      "last_name": str},
+            "State":
+                     {"name": str},
+            "City":
+                     {"state_id": str,
+                      "name": str},
+            "Amenity":
+                     {"name": str},
+            "Place":
+                     {"city_id": str,
+                      "user_id": str,
+                      "name": str,
+                      "description": str,
+                      "number_rooms": int,
+                      "number_bathrooms": int,
+                      "max_guest": int,
+                      "price_by_night": int,
+                      "latitude": float,
+                      "longitude": float,
+                      "amenity_ids": list},
+            "Review":
+            {"place_id": str,
+                         "user_id": str,
+                         "text": str}
+        }
+        return attributes

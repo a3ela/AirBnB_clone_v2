@@ -1,23 +1,17 @@
 #!/usr/bin/python3
-"""Fabric script that generates a .tgz archive from contents
-of the web_static folder.
-name of the archive created must be
-web_static_<year><month><day><hour><minute><second>.tgz
-Otherwise, it should return None
-"""
-from fabric.api import local
-import time
+"""Generates a .tgz archive from the
+contents of the web_static folder"""
+
+from fabric.operations import local
+from datetime import datetime
 
 
 def do_pack():
-    """generates a .tgz archive"""
-    timestamp = time.strftime("%Y%m%d%H%M%S")
-
-    try:
-        local('mkdir -p versions')
-        local('tar -cvzf versions/web_static_{:s}.tgz web_static/'.
-              format(timestamp))
-        return 'versions/web_static_{:s}.tgz'.\
-               format(timestamp)
-    except BaseException:
+    """Function to compress files"""
+    local("mkdir -p versions")
+    result = local("tar -cvzf versions/web_static_{}.tgz web_static"
+                   .format(datetime.strftime(datetime.now(), "%Y%m%d%H%M%S")),
+                   capture=True)
+    if result.failed:
         return None
+    return result
